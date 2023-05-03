@@ -54,18 +54,18 @@ class GJScraper:
             if item['img_src1'] != None:
                 with httpx.Client() as client:
                     response = client.get(item['img_src1'])
-                with open(f"globaljet_fp/{item['img_src1'].split('/')[-1]}.jpg", 'wb') as f:
+                with open(f"globaljet_fp/{item['img_src1'].split('/')[-1]}", 'wb') as f:
                     f.write(response.content)
             if item['img_src2'] != None:
                 with httpx.Client() as client:
                     response = client.get(item['img_src2'])
-                with open(f"globaljet_fp/{item['img_src2'].split('/')[-1]}.jpg", 'wb') as f:
+                with open(f"globaljet_fp/{item['img_src2'].split('/')[-1]}", 'wb') as f:
                     f.write(response.content)
             print('Image downloaded successfully!')
 
 if __name__ == '__main__':
     s = GJScraper(base_url='https://globaljet.aero')
-    for page in range(1,2):
+    for page in range(1,17):
         url = f'https://globaljet.aero/index.php/en/taxonomy/term/13?page={page}'
         html = s.fetch(url)
         items = s.get_img_link(html)
