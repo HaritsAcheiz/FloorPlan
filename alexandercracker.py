@@ -42,13 +42,13 @@ class ACScraper:
 
     def get_img_link(self, html):
         tree = HTMLParser(html)
-        stage1 = tree.css('div.columns-29.w-row > div')
         items = list()
-        for item in stage1:
-            stage2 = tree.css('')
+        stage1 = tree.css('div.columns-29.w-row > div')
+        for sub in stage1:
+            stage2 = sub.css('div.mask-10.w-slider-mask > div')
             for item in stage2:
                 try:
-                    img_url = self.base_url + item.css_first('article > div > div.field.field--name-field-configurations.field--type-entity-reference-revisions.field--label-above > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > img').attributes['src']
+                    img_url = item.css_first('img').attributes['src']
                 except:
                     img_url = None
                 items.append(img_url)
@@ -56,17 +56,12 @@ class ACScraper:
 
     def download_img(self, items):
         for item in items:
-            if not os.path.exists('globaljet_fp'):
-                os.mkdir('globaljet_fp')
-            if item['img_src1'] != None:
+            if not os.path.exists('alexandercracker'):
+                os.mkdir('alexandercracker')
+            if item != None:
                 with httpx.Client() as client:
-                    response = client.get(item['img_src1'])
-                with open(f"globaljet_fp/{item['img_src1'].split('/')[-1]}.jpg", 'wb') as f:
-                    f.write(response.content)
-            if item['img_src2'] != None:
-                with httpx.Client() as client:
-                    response = client.get(item['img_src2'])
-                with open(f"globaljet_fp/{item['img_src2'].split('/')[-1]}.jpg", 'wb') as f:
+                    response = client.get(item)
+                with open(f"alexandercracker/{item.split('/')[-1]}", 'wb') as f:
                     f.write(response.content)
             print('Image downloaded successfully!')
 
@@ -75,9 +70,9 @@ if __name__ == '__main__':
     s = ACScraper(base_url=base_url)
     urls = s.generate_url()
     htmls = []
-    # for url in urls:
-    #     htmls.append(s.fetch(url))
-    htmls = s.fetch('https://www.alexandercraker.com/aircraft-interior-architecture/vip-layout/acj-320-vip-cabin-interior-layouts')
-    print(htmls)
-    # items = s.get_img_link(html)
-    # s.download_img(items)
+    for url in urls:
+        htmls.append(s.fetch(url))
+    # htmls = s.fetch('https://www.alexandercraker.com/aircraft-interior-architecture/vip-layout/acj-320-vip-cabin-interior-layouts')
+    for html in htmls:
+        items = s.get_img_link(html)
+        s.download_img(items)
