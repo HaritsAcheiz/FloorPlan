@@ -2,6 +2,7 @@ import httpx
 from selectolax.parser import HTMLParser
 from dataclasses import dataclass
 import os
+import json
 
 @dataclass
 class EPScraper:
@@ -19,10 +20,17 @@ class EPScraper:
     def parse_url(self, html):
         urls = []
         tree = HTMLParser(html)
-        stage1 = tree.css('tbody > tr')
-        for sub in stage1:
-            url = sub.css_first('td:nth-child(2) > a').attributes['href']
-            urls.append(url)
+        json_data = json.loads(tree.css_first('script#__NEXT_DATA__').text())
+        # json_formatted_str = json.dumps(json_data, indent=2)
+        i=0
+        while 1:
+            try:
+                url = json_data['props']['initialProps']['pageProps']['Contents'][2]['data']['items'][i]['url']
+                i+=1
+                if url != None:
+                    urls.append(self.base_url + url)
+            except:
+                break
         return urls
 
     def fetch(self, url):
@@ -31,40 +39,41 @@ class EPScraper:
         }
 
         with httpx.Client() as client:
-            response = client.get(headers=headers, url=url)
+            response = client.get(headers=headers, url=url, follow_redirects=True)
         return response.text
 
     def get_img_link(self, htmls):
         items = []
-        item = {'img_url':None, 'filename':None}
+        item = None
         for html in htmls:
             tree = HTMLParser(html)
+            parent = tree.css_first('html > body > div > main > div.container > section')
             try:
-                item['img_url'] = tree.css_first('img[style*="object-fit:contain"]').attributes['src']
-                item['filename'] = tree.css_first('img[style*="object-fit:contain"]').attributes['alt']
+                sub = parent.css('div.specification-tab-content__images__items > img')
+                for i in sub:
+                    item = i.attributes['src']
+                    items.append(item)
             except:
-                item['img_url'] = None
-                item['filename'] = None
-            items.append(item.copy())
+                continue
         return items
 
     def download_img(self, items):
-        if not os.path.exists('europair'):
-            os.mkdir('europair')
+        if not os.path.exists('tagaviation'):
+            os.mkdir('tagaviation')
         for item in items:
-            if item['img_url'] != None:
+            if item != None:
                 with httpx.Client() as client:
-                    response = client.get(item['img_url'])
-                with open(f"europair/{item['filename']}", 'wb') as f:
+                    response = client.get(item)
+                with open(f"tagaviation/{item.split('/')[-1]}", 'wb') as f:
                     f.write(response.content)
             else:
                 continue
             print('Image downloaded successfully!')
 
 if __name__ == '__main__':
-    base_url = 'https://www.europair.com'
+    base_url = 'https://www.tagaviation.com'
     s = EPScraper(base_url=base_url)
-    parent_html = s.fetch_url('https://www.europair.com/en/private-jet-guide')
+    parent_html = s.fetch_url('https://www.tagaviation.com/en/charter/the-fleet')
     urls = s.parse_url(parent_html)
     htmls = []
     for url in urls:
