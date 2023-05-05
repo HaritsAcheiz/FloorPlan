@@ -14,6 +14,7 @@ class GPScraper:
 
         with httpx.Client(verify=False) as client:
             response = client.get(headers=headers, url=url, follow_redirects=True)
+        print(response)
         return response.text
 
     def get_img_link(self, html):
@@ -55,15 +56,15 @@ class GPScraper:
             print('Image downloaded successfully!')
 
 if __name__ == '__main__':
-    base_url = 'https://greenpoint.com'
+    base_url = 'https://greenpoint.com/'
     url = 'https://greenpoint.com/interior-layouts'
     s = GPScraper(base_url=base_url)
     ac_links = []
     htmls = []
     ac_html = s.fetch(url)
     ac_links = s.get_ac_link(ac_html)
+    print(ac_links)
     for url in ac_links:
-        print(url)
         htmls.append(s.fetch(url))
     for html in htmls:
         items = s.get_img_link(html)
